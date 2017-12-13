@@ -62,7 +62,7 @@ variable "asset_dir" {
 variable "networking" {
   description = "Choice of networking provider (flannel or calico)"
   type        = "string"
-  default     = "calico"
+  default     = "cilium"
 }
 
 variable "pod_cidr" {

@@ -56,7 +56,7 @@ variable "disk_size" {
 variable "networking" {
   description = "Choice of networking provider (flannel or calico)"
   type        = "string"
-  default     = "flannel"
+  default     = "cilium"
 }
 
 variable "service_cidr" {
