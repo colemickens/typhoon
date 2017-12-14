@@ -45,7 +45,7 @@ resource "google_compute_firewall" "allow-ingress" {
 }
 
 resource "google_compute_firewall" "internal-etcd-peer" {
-  name    = "${var.cluster_name}-internal-etcd"
+  name    = "${var.cluster_name}-internal-etcd-peer"
   network = "${google_compute_network.network.name}"
 
   allow {
@@ -59,15 +59,15 @@ resource "google_compute_firewall" "internal-etcd-peer" {
 
 # TODO: evaluate cilium using k8s store or a diff one or what
 resource "google_compute_firewall" "internal-etcd-clients" {
-  name    = "${var.cluster_name}-internal-etcd"
+  name    = "${var.cluster_name}-internal-etcd-clients"
   network = "${google_compute_network.network.name}"
 
   allow {
     protocol = "tcp"
-    ports    = [2380]
+    ports    = [2379]
   }
 
-  source_tags = ["${var.cluster_name}-controller"]
+  source_tags = ["${var.cluster_name}-controller", "${var.cluster_name}-worker" ]
   target_tags = ["${var.cluster_name}-controller"]
 }
 
