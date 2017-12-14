@@ -1,0 +1,274 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: cilium-config
+  namespace: kube-system
+data:
+  # This etcd-config contains the etcd endpoints of your cluster. If you use
+  # TLS please make sure you uncomment the ca-file line and add the respective
+  # certificate has a k8s secret, see explanation bellow in the comment labeled
+  # "ETCD-CERT"
+  etcd-config: |-
+    ---
+    endpoints:
+    - https://colemick5a31cf08-etcd0.k8s.mickens.xyz:2379
+    ca-file: '/var/lib/etcd-secrets/etcd-ca'
+    key-file: '/var/lib/etcd-secrets/etcd-client-key'
+    cert-file: '/var/lib/etcd-secrets/etcd-client-crt'
+
+  # If you want to run cilium in debug mode change this value to true
+  debug: "false"
+  disable-ipv4: "false"
+
+  # Allow prometheus to scrape on this addr:port. Not specifying an address
+  # will bind to all available interfaces inthe container.
+  prometheus-serve-addr: ":9090"
+---
+# The etcd secrets can be populated in kubernetes.
+# For more information see: https://kubernetes.io/docs/concepts/configuration/secret
+apiVersion: v1
+kind: Secret
+type: Opaque
+metadata:
+  name: cilium-etcd-secrets
+  namespace: kube-system
+data:
+  # ETCD-CERT: Each value should contain the whole certificate in base64, on a
+  # single line. You can generate the base64 with: $ base64 -w 0 ./ca.pem
+  # (the "-w 0" generates the output on a single line)
+  etcd-ca: "LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUREekNDQWZlZ0F3SUJBZ0lSQUliQ2FjMllvS0puM21NazJ3MGlNTWN3RFFZSktvWklodmNOQVFFTEJRQXcKSVRFTk1Bc0dBMVVFQ2hNRVpYUmpaREVRTUE0R0ExVUVBeE1IWlhSalpDMWpZVEFlRncweE56RXlNVFF3TVRBNApNelphRncweE9ERXlNVFF3TVRBNE16WmFNQ0V4RFRBTEJnTlZCQW9UQkdWMFkyUXhFREFPQmdOVkJBTVRCMlYwClkyUXRZMkV3Z2dFaU1BMEdDU3FHU0liM0RRRUJBUVVBQTRJQkR3QXdnZ0VLQW9JQkFRRFlDQXUwdS9ydFdPS1cKa2E2WDh3TTlLMDVWUk1yd3hJbEQ1U1RZTGZSNldCRGZKckJrZlJacU5OSjJCYTZZMHpleXRxbm56ckQ5bXVmTApKclBueUw4S3VHZ0VieDhoUzdvUlB0WkZoNTBPcnV3NWxZNC81Z2lubzIyaTRyN2c0ZE5Wc09WTHlraGZ1Z3FhCkhVNDhqNGtTTXY4czVaaHBOc0FlSkdaMlRPdEVaeUdEeVhhSHcyQzV2UkZnTjhtZUkzZVZZTytnalJTdG00TEcKdnpqV1NPcnJlTWJZVy8yMVVCVHZ6VjhxOEh2Y2ZHMGM5QUphUk9TZW8yK3pscWNLNXZ0SGR2YmlKZGxCdVQrNgpma0JSZXF1Sm5relJaejNIRXN4SVJxTDArZ1hJRHFYbXkyVVpsNU1DNXd0d0ZwdlY4QVVPY0RmS1J5T2YrcWMwClNwQ21HTWdqQWdNQkFBR2pRakJBTUE0R0ExVWREd0VCL3dRRUF3SUNwREFQQmdOVkhSTUJBZjhFQlRBREFRSC8KTUIwR0ExVWREZ1FXQkJSSk5idzlpaTByamxnTTBvWjRkcGQ4c3pJNmxEQU5CZ2txaGtpRzl3MEJBUXNGQUFPQwpBUUVBZUlBSjVvdVd1KzU3eGJlZ3FtbWpaUEJaeW5ZaUczTGtiQ1ZOUTJaRFBoeS9Jd29UeHdOellKVGJYZVkrCm9zNnVTUi9OZ1RKODlBMjlDSDMxZy9wbDRkWW9DVHRBOFBIOS9veUp6V1luOUx2RFphVGd1NitVUGhqQlhwT1UKZnlMYTdqeXlBQ2N3R2pLcEpCeTdoVjZ3TDBhYVZWWjl3SHFNTFBGakFxMncvbWhJeTdCQjI1cGxkV1AvdFBWZAoxQ2h3aTVaOEpEcGNPWXhoMGVmWmVlNEFKUkplYXZ3QUxTU3FEZzlWb05acUo5b2xwVXMxbi9mczh4TGVxNzd4CkkvbWlpWjJVZjl1Mkd4M2ErNGpvU2c0cG9adCthNzVpcy9UdXUwdVpLblFkSTJ5VUNHNC9zcFV0Y09JbmdlUG8KZWJRenJaU1paYitIK1RoVmJ3S1dkL3o0OEE9PQotLS0tLUVORCBDRVJUSUZJQ0FURS0tLS0tCg=="
+  etcd-client-key: "LS0tLS1CRUdJTiBSU0EgUFJJVkFURSBLRVktLS0tLQpNSUlFb3dJQkFBS0NBUUVBb1QrNFdjOWZqSFYzMk9UQU1pd0dLaTNicU9jK2FLQnZua3V0QUc0bGJMRTBReGJXCkxmNjhHWjBYRG9XbmNwTUx2SXdoUFZhQUN4bmFhUzEwQjZTTkpZdXlnN29ZZzdXNUhVaGlobERiamh4dWxQM1cKZFl6K1FsKzBWbmg5a0hsYWJrcE1pNVdobkZOZlRkbG03ajZ5VTQ5ZldISXFHUWZFdmpCTE01eUhDYjRScHpHcQpSejkwaXZIaUkwcks3Q2ZpNVRjRUNiOUtDUUpXd2xCdC9FSkdKaHlsUXVIMUFGNjRtNEZlMGcwNDhocmhMK0RHCjQ0MGdqUTJHSERsSjVITGtBenJlUmZVUXluYzhMcDQrd29TKzZkbEpJQUR2U1cyeG5yWnMyNzJYcXJ4V0pHdXoKVE5FdHA3VGJhWGVOQzFlVFo5VUYzbmVsQWt6V1FxL0VDZnVMTFFJREFRQUJBb0lCQUFINUo2Wmh0VWVnd0dDMQpHKzBCUU9vUE9acnRpWVA2UXFOclJhaTFzRnVPSjVlU2xmaG1INk1vbXZtZ2hSWVAycHJxRkJZT0V1OFAxKzVsCmtmL3Q4WlErQzJjMVJjdUcwOGNaOWFxekhweTBtRjNXWldOMjREMnJzaWRFdmpTZ1o0emw5OTNWYk83ZXpsSEQKa1ZEbEQ0V2FRWTV4aHpaYk0vc24yQ08vako5LzRQbVZQM2lsYWV2VW94RlMyL2V4Y0cvTVNhaFc3RGYyUTM1ZwpReFpZZitmWFlsQXZlYmxWN21tNjdadEI0a0xaY0EvL0NKR3pGWUN1cm1zdmhRQktLaGJJUUR5WXpwMHNSOUsyCjJDUUF3d1NwZUFNTWIxUmJqNFdhMVRXc2hYMEFhUUg3WmdzZzh1MjhlQThGMHhtNmN1QWcvTzVtQllmT0EwK0wKSDhKQ2pnRUNnWUVBdy9qSDZTb3NrOGszOG9MTlc3dHorb0FnR3BSUXkzVm5BcU1KeEtuTmFUL0NybDkxdDZSdgpCOXlyMlZ2cWVvY0g4K2M5KzFiQ0IyL1F3bitNTzFPWExWMi9RMGxVVFM3UWNndUFJUTBVMVlpN2xvSy9CRkhPCjU1R2hac094Rzdndnh1enlRK0tnRjRrTllCazBLWldYelh3M3FJcG5SMmZqQnRBUVpOVnhEdTBDZ1lFQTBxUWcKbzhmaUxacytiL1ZyeVFkbFY3aDlPdmxsWU8xM3dISll0VUg5WnErczZGZXVCaktNMFdsL2pHeTQ3Q1k0OEtnTAo4NGtTMnFBTks3YmV5dlMzTkJ3ZUVyeDBVK1RJVHB1UUhoT2lCUVBBNmYyRGpZSGVxd2tqY25YNjRGUkIzUG9PCjBFaXRqbzgwb21zZEM0Qys4U1hBeHR4ZzA4TnF1eWtST3dOSXBVRUNnWUJGUk9GOHREQ1BpRmRqUEFMVWd0eksKMVpFRGRCdGUzeitxK2ZBUStLZ25wS2J1dGNWSlJURU55VjFnOWhGYWYvSTZyeWtFZHpVY0pkVFhldmdaWEVHYQpnb0dCaWlEbkt6MzRvY0lIYkxWSmlRd3Rka2VJZ2xZdEdoZS8yRG40LzFDNzhyTHJkZVo2aXpJVUhyU0dZbDhHCi9mbzZjN2x2enZPN1M3NFB0alpCUFFLQmdRRE15UHBlb0g2NVBodm10eUJTTWhtSnZmZ3FOTHNtRDlpRHhlZU8KV1JpbUU1Y3p6OEtGamZHdnlqUlI3b1dlT003VTBWdkZLZmVsaTBNaXc4ZzRZdEFXSGx2eWRUdFhNSzY1RmE1NApQemdlVGZib3hpcDJrZE5NVHpjaUdhZU5IdjFsZThxWkhuOTFnSzU0VlZESWxTT055Tmx4dkdGNm41c05XTERDCndiK0h3UUtCZ0ZlcmNSaGpQTzgrWmFlT3NOWHhaKzkrdElhUE5LY1llSmlwdGJOSkpqRzkvc1RpbmlSSy83L3UKMDZvSWZLQ0dibXhHUTUydkhhOGh2c2k2NkJ4MmQ5TUxqR2EzL1BLUmNRb08wazh0YmtxODcyaHdxU0U1QmhKdgpBZFpiU1dPWTBWTHJDblRVQWM5cG1zZXpLM01abnh5K2dlcGFaVjNzM3h5a1BFN2NlcGZrCi0tLS0tRU5EIFJTQSBQUklWQVRFIEtFWS0tLS0tCg=="
+  etcd-client-crt: "LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSURkakNDQWw2Z0F3SUJBZ0lRZXA4RWd2MTByK1NONWhHM1JoQlFoekFOQmdrcWhraUc5dzBCQVFzRkFEQWgKTVEwd0N3WURWUVFLRXdSbGRHTmtNUkF3RGdZRFZRUURFd2RsZEdOa0xXTmhNQjRYRFRFM01USXhOREF4TURnegpObG9YRFRFNE1USXhOREF4TURnek5sb3dKVEVOTUFzR0ExVUVDaE1FWlhSalpERVVNQklHQTFVRUF4TUxaWFJqClpDMWpiR2xsYm5Rd2dnRWlNQTBHQ1NxR1NJYjNEUUVCQVFVQUE0SUJEd0F3Z2dFS0FvSUJBUUNoUDdoWnoxK00KZFhmWTVNQXlMQVlxTGR1bzV6NW9vRytlUzYwQWJpVnNzVFJERnRZdC9yd1puUmNPaGFkeWt3dThqQ0U5Vm9BTApHZHBwTFhRSHBJMGxpN0tEdWhpRHRia2RTR0tHVU51T0hHNlUvZFoxalA1Q1g3UldlSDJRZVZwdVNreUxsYUdjClUxOU4yV2J1UHJKVGoxOVljaW9aQjhTK01Fc3puSWNKdmhHbk1hcEhQM1NLOGVJalNzcnNKK0xsTndRSnYwb0oKQWxiQ1VHMzhRa1ltSEtWQzRmVUFYcmliZ1Y3U0RUanlHdUV2NE1iampTQ05EWVljT1Vua2N1UURPdDVGOVJESwpkend1bmo3Q2hMN3AyVWtnQU85SmJiR2V0bXpidlplcXZGWWthN05NMFMybnROdHBkNDBMVjVObjFRWGVkNlVDClROWkNyOFFKKzRzdEFnTUJBQUdqZ2FVd2dhSXdEZ1lEVlIwUEFRSC9CQVFEQWdXZ01CMEdBMVVkSlFRV01CUUcKQ0NzR0FRVUZCd01CQmdnckJnRUZCUWNEQWpBTUJnTlZIUk1CQWY4RUFqQUFNQjhHQTFVZEl3UVlNQmFBRkVrMQp2RDJLTFN1T1dBelNobmgybDN5ek1qcVVNRUlHQTFVZEVRUTdNRG1DSm1OdmJHVnRhV05yTldFek1XTm1NRGd0ClpYUmpaREF1YXpoekxtMXBZMnRsYm5NdWVIbDZnZ2xzYjJOaGJHaHZjM1NIQkg4QUFBRXdEUVlKS29aSWh2Y04KQVFFTEJRQURnZ0VCQUFHMjZlS3BvaTZNVEloVlhJZEllL2grb3c4UmVxZmpUTEtONW94RXd2TFBRQzR2dENiVApXWHpiUTVRdFlYSW1xYS8rK3k1RTBFUkdIWTNVZEY3QzczYlBxdmRtUXhvSmFWTmE2T2prNithcGxGaGlUMjdPCmYvRk1OK2hWZy85Ujhobys1ejJaUlZHUER3QStPemxUZkJ1cGdnaUQ5bzk2VmhWZHVJaVh3YjlycFBGb0Zra1YKbzJ5OWgyOVpaU0VZVGpjbDdyL1M2TnJkVG5qb1dtOG1rdzMvd3NCcVFiZ2NxcTBWdXFadXpsS21sNzhDTmhKdwpWekZIWkZHS0phS1JWSlBTRTVxbW4wUUV4NkpCRXZqSVg0VUtCOVp5NFl3eFFkYWpkNFZUdGVua3ZPV3FaUWlYCmZraEtRWFFQN211VHpYVTVhUVRydnMrRTBHZC8wUXdBS3N3PQotLS0tLUVORCBDRVJUSUZJQ0FURS0tLS0tCg=="
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: cilium
+  namespace: kube-system
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1beta1
+metadata:
+  name: cilium
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cilium
+subjects:
+- kind: ServiceAccount
+  name: cilium
+  namespace: kube-system
+- kind: Group
+  name: system:nodes
+---
+apiVersion: extensions/v1beta1
+kind: DaemonSet
+metadata:
+  name: cilium
+  namespace: kube-system
+spec:
+  template:
+    metadata:
+      labels:
+        k8s-app: cilium
+        kubernetes.io/cluster-service: "true"
+      annotations:
+        # This annotation plus the CriticalAddonsOnly toleration makes
+        # cilium to be a critical pod in the cluster, which ensures cilium
+        # gets priority scheduling.
+        # https://kubernetes.io/docs/tasks/administer-cluster/guaranteed-scheduling-critical-addon-pods/
+        scheduler.alpha.kubernetes.io/critical-pod: ''
+        scheduler.alpha.kubernetes.io/tolerations: >-
+          [{"key":"dedicated","operator":"Equal","value":"master","effect":"NoSchedule"}]
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9090"
+    spec:
+      serviceAccountName: cilium
+      containers:
+      - image: cilium/cilium:stable
+        imagePullPolicy: Always
+        name: cilium-agent
+        command: [ "cilium-agent" ]
+        args:
+          - "--debug=$(CILIUM_DEBUG)"
+          - "-t"
+          - "vxlan"
+          - "--kvstore"
+          - "etcd"
+          - "--kvstore-opt"
+          - "etcd.config=/var/lib/etcd-config/etcd.config"
+          - "--disable-ipv4=$(DISABLE_IPV4)"
+        ports:
+          - name: prometheus
+            containerPort: 9090
+        lifecycle:
+          postStart:
+            exec:
+              command:
+                - "/cni-install.sh"
+          preStop:
+            exec:
+              command:
+                - "/cni-uninstall.sh"
+        env:
+          - name: "K8S_NODE_NAME"
+            valueFrom:
+              fieldRef:
+                fieldPath: spec.nodeName
+          - name: "CILIUM_DEBUG"
+            valueFrom:
+              configMapKeyRef:
+                name: cilium-config
+                key: debug
+          - name: "DISABLE_IPV4"
+            valueFrom:
+              configMapKeyRef:
+                name: cilium-config
+                key: disable-ipv4
+          - name: "PROMETHEUS_SERVE_ADDR"
+            valueFrom:
+              configMapKeyRef:
+                name: cilium-config
+                key: prometheus-serve-addr
+        livenessProbe:
+          exec:
+            command:
+            - cilium
+            - status
+          initialDelaySeconds: 180
+          failureThreshold: 10
+          periodSeconds: 10
+        readinessProbe:
+          exec:
+            command:
+            - cilium
+            - status
+          initialDelaySeconds: 180
+          periodSeconds: 15
+        volumeMounts:
+          - name: bpf-maps
+            mountPath: /sys/fs/bpf
+          - name: cilium-run
+            mountPath: /var/run/cilium
+          - name: cni-path
+            mountPath: /host/opt/cni/bin
+          - name: etc-cni-netd
+            mountPath: /host/etc/cni/net.d
+          - name: docker-socket
+            mountPath: /var/run/docker.sock
+            readOnly: true
+          - name: etcd-config-path
+            mountPath: /var/lib/etcd-config
+            readOnly: true
+          - name: etcd-secrets
+            mountPath: /var/lib/etcd-secrets
+            readOnly: true
+        securityContext:
+          capabilities:
+            add:
+              - "NET_ADMIN"
+          privileged: true
+      hostNetwork: true
+      volumes:
+          # To keep state between restarts / upgrades
+        - name: cilium-run
+          hostPath:
+            path: /var/run/cilium
+          # To keep state between restarts / upgrades
+        - name: bpf-maps
+          hostPath:
+            path: /sys/fs/bpf
+          # To read docker events from the node
+        - name: docker-socket
+          hostPath:
+            path: /var/run/docker.sock
+          # To install cilium cni plugin in the host
+        - name: cni-path
+          hostPath:
+            path: /opt/cni/bin
+          # To install cilium cni configuration in the host
+        - name: etc-cni-netd
+          hostPath:
+              path: /etc/cni/net.d
+          # To read the etcd config stored in config maps
+        - name: etcd-config-path
+          configMap:
+            name: cilium-config
+            items:
+            - key: etcd-config
+              path: etcd.config
+          # To read the k8s etcd secrets in case the user might want to use TLS
+        - name: etcd-secrets
+          secret:
+            secretName: cilium-etcd-secrets
+      tolerations:
+      - effect: NoSchedule
+        key: node-role.kubernetes.io/master
+      - effect: NoSchedule
+        key: node.cloudprovider.kubernetes.io/uninitialized
+        value: "true"
+      # Mark cilium's pod as critical for rescheduling
+      - key: CriticalAddonsOnly
+        operator: "Exists"
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1beta1
+metadata:
+  name: cilium
+rules:
+- apiGroups:
+  - "networking.k8s.io"
+  resources:
+  - networkpolicies
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - namespaces
+  - services
+  - nodes
+  - endpoints
+  - componentstatuses
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  - nodes
+  verbs:
+  - get
+  - list
+  - watch
+  - update
+- apiGroups:
+  - extensions
+  resources:
+  - networkpolicies #FIXME remove this when we drop support for k8s NP-beta GH-1202
+  - thirdpartyresources
+  - ingresses
+  verbs:
+  - create
+  - get
+  - list
+  - watch
+- apiGroups:
+  - "apiextensions.k8s.io"
+  resources:
+  - customresourcedefinitions
+  verbs:
+  - create
+  - get
+  - list
+  - watch
+- apiGroups:
+  - cilium.io
+  resources:
+  - ciliumnetworkpolicies
+  verbs:
+  - "*"

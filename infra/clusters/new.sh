@@ -5,7 +5,7 @@ export CLUSTER=$(echo "$(date +%s)"|xargs printf "$PREFIX%x")
 
 mkdir $CLUSTER
 cp -a _template/* $CLUSTER/
-sed -i "s/CLUSTER_NAME/${CLUSTER}/g" $CLUSTER/cluster.tf
+sed -i "s/{{CLUSTER_NAME}}/${CLUSTER}/g" $CLUSTER/cluster.tf
 
 cd $CLUSTER
 # don't bother, this is a one-shot deal right now anyway
