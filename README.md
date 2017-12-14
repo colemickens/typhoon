@@ -1,5 +1,8 @@
 # Typhoon [![IRC](https://img.shields.io/badge/freenode-%23typhoon-0099ef.svg)]() <img align="right" src="https://storage.googleapis.com/poseidon/typhoon-logo.png">
 
+
+TODO: add info about cilium + libvirt + cc here
+
 Typhoon is a minimal and free Kubernetes distribution.
 
 * Minimal, stable base Kubernetes distribution

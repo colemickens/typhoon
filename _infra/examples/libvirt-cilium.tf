@@ -1,5 +1,5 @@
 module "google-cloud-cluster" {
-  source = "../../../google-cloud/container-linux/kubernetes"
+  source = "../../../libvirt/container-linux/kubernetes"
 
   region        = "us-west1"
   dns_zone      = "k8s.mickens.xyz"
