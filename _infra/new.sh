@@ -29,5 +29,4 @@ cd _clusters/$CLUSTER
 terraform init
 terraform plan
 terraform get --update
-terraform apply
-
+terraform apply -auto-approve

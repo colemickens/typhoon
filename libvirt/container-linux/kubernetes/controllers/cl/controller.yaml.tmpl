@@ -27,11 +27,11 @@ systemd:
             [Service]
             Environment="ETCD_IMAGE_TAG=v3.2.0"
             Environment="ETCD_NAME=${etcd_name}"
-            Environment="ETCD_ADVERTISE_CLIENT_URLS=https://${etcd_domain}:2379"
-            Environment="ETCD_INITIAL_ADVERTISE_PEER_URLS=https://${etcd_domain}:2380"
+            Environment="ETCD_ADVERTISE_CLIENT_URLS=https://0.0.0.0:2379"
+            Environment="ETCD_INITIAL_ADVERTISE_PEER_URLS=https://0.0.0.0:2380"
             Environment="ETCD_LISTEN_CLIENT_URLS=https://0.0.0.0:2379"
             Environment="ETCD_LISTEN_PEER_URLS=https://0.0.0.0:2380"
-            Environment="ETCD_INITIAL_CLUSTER=${etcd_initial_cluster}"
+            Environment="ETCD_INITIAL_CLUSTER=0.0.0.0"
             Environment="ETCD_STRICT_RECONFIG_CHECK=true"
             Environment="ETCD_SSL_DIR=/etc/ssl/etcd"
             Environment="ETCD_TRUSTED_CA_FILE=/etc/ssl/certs/etcd/server-ca.crt"
@@ -132,13 +132,13 @@ storage:
           clusters:
           - name: local
             cluster:
-              server: ${kubeconfig_server}
-              certificate-authority-data: ${kubeconfig_ca_cert}
+              server: {kubeconfig_server}
+              certificate-authority-data: {kubeconfig_ca_cert}
           users:
           - name: kubelet
             user:
-              client-certificate-data: ${kubeconfig_kubelet_cert}
-              client-key-data: ${kubeconfig_kubelet_key}
+              client-certificate-data: {kubeconfig_kubelet_cert}
+              client-key-data: {kubeconfig_kubelet_key}
           contexts:
           - context:
               cluster: local
@@ -188,5 +188,6 @@ storage:
 passwd:
   users:
     - name: core
+      passwd: $1$SaltSalt$YhgRYajLPrYevs14poKBQ0
       ssh_authorized_keys:
         - "${ssh_authorized_key}"

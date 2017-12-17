@@ -1,150 +1,27 @@
-resource "google_compute_network" "network" {
-  name                    = "${var.cluster_name}"
-  description             = "Network for the ${var.cluster_name} cluster"
-  auto_create_subnetworks = true
+
+resource "libvirt_network" "cluster_network" {
+  # the name used by libvirt
+  name = "cluster_network"
+
+  # mode can be: "nat" (default), "none", "route", "bridge"
+  mode = "nat"
+
+  #  the domain used by the DNS server in this network
+  #domain = "k8s.local"
+
+  # the addresses allowed for domains connected and served by the DHCP server
+  addresses = ["10.17.3.0/24"]
+
+  # (optional) the bridge device defines the name of a bridge device
+  # which will be used to construct the virtual network.
+  # (only necessary in "bridge" mode)
+  # bridge = "br7"
+
+  # (Optional) one or more DNS forwarder entries.  One or both of
+  # "address" and "domain" must be specified.  The format is:
+  # dns_forwarder {
+  #   address = "my address"
+  #   domain = "my domain"
+  # }
 }
 
-resource "google_compute_firewall" "allow-ssh" {
-  name    = "${var.cluster_name}-allow-ssh"
-  network = "${google_compute_network.network.name}"
-
-  allow {
-    protocol = "tcp"
-    ports    = [22]
-  }
-
-  source_ranges = ["0.0.0.0/0"]
-  target_tags = ["${var.cluster_name}-controller", "${var.cluster_name}-worker"]
-}
-
-resource "google_compute_firewall" "allow-apiserver" {
-  name    = "${var.cluster_name}-allow-apiserver"
-  network = "${google_compute_network.network.name}"
-
-  allow {
-    protocol = "tcp"
-    ports    = [443]
-  }
-
-  source_ranges = ["0.0.0.0/0"]
-  target_tags = ["${var.cluster_name}-controller"]
-}
-
-
-resource "google_compute_firewall" "allow-ingress" {
-  name    = "${var.cluster_name}-allow-ingress"
-  network = "${google_compute_network.network.name}"
-
-  allow {
-    protocol = "tcp"
-    ports    = [80, 443]
-  }
-
-  source_ranges = ["0.0.0.0/0"]
-  target_tags = ["${var.cluster_name}-worker"]
-}
-
-resource "google_compute_firewall" "internal-etcd-peer" {
-  name    = "${var.cluster_name}-internal-etcd-peer"
-  network = "${google_compute_network.network.name}"
-
-  allow {
-    protocol = "tcp"
-    ports    = [2380]
-  }
-
-  source_tags = ["${var.cluster_name}-controller"]
-  target_tags = ["${var.cluster_name}-controller"]
-}
-
-# TODO: evaluate cilium using k8s store or a diff one or what
-resource "google_compute_firewall" "internal-etcd-clients" {
-  name    = "${var.cluster_name}-internal-etcd-clients"
-  network = "${google_compute_network.network.name}"
-
-  allow {
-    protocol = "tcp"
-    ports    = [2379]
-  }
-
-  source_tags = ["${var.cluster_name}-controller", "${var.cluster_name}-worker" ]
-  target_tags = ["${var.cluster_name}-controller"]
-}
-
-# Calico BGP and IPIP
-# https://docs.projectcalico.org/v2.5/reference/public-cloud/gce
-resource "google_compute_firewall" "internal-calico" {
-  count = "${var.networking == "calico" ? 1 : 0}"
-
-  name    = "${var.cluster_name}-internal-calico"
-  network = "${google_compute_network.network.name}"
-
-  allow {
-    protocol = "tcp"
-    ports    = ["179"]
-  }
-
-  allow {
-    protocol = "ipip"
-  }
-
-  source_tags = ["${var.cluster_name}-controller", "${var.cluster_name}-worker"]
-  target_tags = ["${var.cluster_name}-controller", "${var.cluster_name}-worker"]
-}
-
-# flannel
-resource "google_compute_firewall" "internal-flannel" {
-  count = "${var.networking == "flannel" ? 1 : 0}"
-
-  name    = "${var.cluster_name}-internal-flannel"
-  network = "${google_compute_network.network.name}"
-
-  allow {
-    protocol = "udp"
-    ports    = [8472]
-  }
-
-  source_tags = ["${var.cluster_name}-controller", "${var.cluster_name}-worker"]
-  target_tags = ["${var.cluster_name}-controller", "${var.cluster_name}-worker"]
-}
-
-# Allow prometheus (workload) to scrape node-exporter daemonset
-resource "google_compute_firewall" "internal-node-exporter" {
-  name    = "${var.cluster_name}-internal-node-exporter"
-  network = "${google_compute_network.network.name}"
-
-  allow {
-    protocol = "tcp"
-    ports    = [9100]
-  }
-
-  source_tags = ["${var.cluster_name}-worker"]
-  target_tags = ["${var.cluster_name}-controller", "${var.cluster_name}-worker"]
-}
-
-# kubelet API to allow kubectl exec and log
-resource "google_compute_firewall" "internal-kubelet" {
-  name    = "${var.cluster_name}-internal-kubelet"
-  network = "${google_compute_network.network.name}"
-
-  allow {
-    protocol = "tcp"
-    ports    = [10250]
-  }
-
-  source_tags = ["${var.cluster_name}-controller"]
-  target_tags = ["${var.cluster_name}-controller", "${var.cluster_name}-worker"]
-}
-
-resource "google_compute_firewall" "internal-kubelet-readonly" {
-  name    = "${var.cluster_name}-internal-kubelet-readonly"
-  network = "${google_compute_network.network.name}"
-
-  allow {
-    protocol = "tcp"
-    ports    = [10255]
-  }
-
-  source_tags = ["${var.cluster_name}-controller", "${var.cluster_name}-worker"]
-  target_tags = ["${var.cluster_name}-controller", "${var.cluster_name}-worker"]
-}

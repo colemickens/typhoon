@@ -4,10 +4,6 @@ terraform {
   required_version = ">= 0.10.4"
 }
 
-provider "google" {
-  version = "~> 1.2"
-}
-
 provider "local" {
   version = "~> 1.0"
 }

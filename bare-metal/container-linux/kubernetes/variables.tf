@@ -63,7 +63,7 @@ variable "asset_dir" {
 }
 
 variable "networking" {
-  description = "Choice of networking provider (flannel or calico)"
+  description = "Choice of networking provider ('flannel', 'calico', or 'cilium')"
   type        = "string"
   default     = "calico"
 }

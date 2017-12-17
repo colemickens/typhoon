@@ -3,7 +3,7 @@ module "bootkube" {
   source = "../../../../terraform-render-bootkube"
 
   cluster_name = "${var.cluster_name}"
-  api_servers  = ["${format("%s.%s", var.cluster_name, var.dns_zone)}"]
+  api_servers  = ["${module.controllers.api_servers}"]
   etcd_servers = "${module.controllers.etcd_fqdns}"
   asset_dir    = "${var.asset_dir}"
   networking   = "${var.networking}"

@@ -1,92 +1,42 @@
-# Discrete DNS records for each controller's private IPv4 for etcd usage
-resource "google_dns_record_set" "etcds" {
-  count = "${var.count}"
-
-  # DNS Zone name where record should be created
-  managed_zone = "${var.dns_zone_name}"
-
-  # DNS record
-  name = "${format("%s-etcd%d.%s.", var.cluster_name, count.index,  var.dns_zone)}"
-  type = "A"
-  ttl  = 300
-
-  # private IPv4 address for etcd
-  rrdatas = ["${element(google_compute_instance.controllers.*.network_interface.0.address, count.index)}"]
+resource "libvirt_volume" "cluster_controller_volume" {
+  name           = "cluster_controller_volume.qcow2"
+  #base_volume_id = "${libvirt_volume.cluster_base_volume.id}"
+  source         = "/coreos.qcow2"
 }
 
-# Zones in the region
-data "google_compute_zones" "all" {
-  region = "${var.region}"
+data "template_file" "cluster_controller_cloudinit" {
+  template = "${file("${path.module}/cl/controller.yaml.tmpl")}"
+  vars {
+    etcd_name = "${var.cluster_name}"
+    k8s_dns_service_ip   = "${cidrhost(var.service_cidr, 10)}"
+    ssh_authorized_key = "${var.ssh_authorized_key}"
+  }
 }
 
-# Controller instances
-resource "google_compute_instance" "controllers" {
-  count = "${var.count}"
+resource "libvirt_cloudinit" "cluster_controller_cloudinit" {
+  name = "cluster_controller_cloudinit.iso"
+  user_data = "${data.template_file.cluster_controller_cloudinit.rendered}"
+}
 
-  name         = "${var.cluster_name}-controller-${count.index}"
-  zone         = "${element(data.google_compute_zones.all.names, count.index)}"
-  machine_type = "${var.machine_type}"
 
-  metadata {
-    user-data = "${element(data.ct_config.controller_ign.*.rendered, count.index)}"
-  }
+resource "libvirt_domain" "controller_domain" {
+  name = "controller"
+  memory = "2048"
+  vcpu = 1
 
-  boot_disk {
-    auto_delete = true
+  firmware = "/usr/share/ovmf/x64/OVMF_CODE.fd"
 
-    initialize_params {
-      image = "${var.os_image}"
-      size  = "${var.disk_size}"
-    }
-  }
+  cloudinit = "${libvirt_cloudinit.cluster_controller_cloudinit.id}"
 
   network_interface {
-    network = "${var.network}"
-
-    # Ephemeral external IP
-    access_config = {}
+    network_id = "${var.network_id}"
   }
 
-  can_ip_forward = true
-  tags = ["${var.cluster_name}-controller"]
-}
-
-# Controller Container Linux Config
-data "template_file" "controller_config" {
-  count = "${var.count}"
-
-  template = "${file("${path.module}/cl/controller.yaml.tmpl")}"
-
-  vars = {
-    # Cannot use cyclic dependencies on controllers or their DNS records
-    etcd_name   = "etcd${count.index}"
-    etcd_domain = "${var.cluster_name}-etcd${count.index}.${var.dns_zone}"
-
-    # etcd0=https://cluster-etcd0.example.com,etcd1=https://cluster-etcd1.example.com,...
-    etcd_initial_cluster = "${join(",", formatlist("%s=https://%s:2380", null_resource.repeat.*.triggers.name, null_resource.repeat.*.triggers.domain))}"
-
-    k8s_dns_service_ip      = "${cidrhost(var.service_cidr, 10)}"
-    ssh_authorized_key      = "${var.ssh_authorized_key}"
-    kubeconfig_ca_cert      = "${var.kubeconfig_ca_cert}"
-    kubeconfig_kubelet_cert = "${var.kubeconfig_kubelet_cert}"
-    kubeconfig_kubelet_key  = "${var.kubeconfig_kubelet_key}"
-    kubeconfig_server       = "${var.kubeconfig_server}"
+  boot_device {
+    dev = [ "hd" ]
   }
-}
 
-# Horrible hack to generate a Terraform list of a desired length without dependencies.
-# Ideal ${repeat("etcd", 3) -> ["etcd", "etcd", "etcd"]}
-resource null_resource "repeat" {
-  count = "${var.count}"
-
-  triggers {
-    name   = "etcd${count.index}"
-    domain = "${var.cluster_name}-etcd${count.index}.${var.dns_zone}"
+  disk {
+    volume_id = "${libvirt_volume.cluster_controller_volume.id}"
   }
-}
-
-data "ct_config" "controller_ign" {
-  count        = "${var.count}"
-  content      = "${element(data.template_file.controller_config.*.rendered, count.index)}"
-  pretty_print = false
 }

@@ -1,10 +1,9 @@
-module "google-cloud-cluster" {
-  source = "../../../libvirt/container-linux/kubernetes"
+provider "libvirt" {
+  uri = "qemu:///system"
+}
 
-  region        = "us-west1"
-  dns_zone      = "k8s.mickens.xyz"
-  dns_zone_name = "mickens-xyz"
-  os_image      = "coreos-stable-1576-4-0-v20171206"
+module "libvirt-cluster" {
+  source = "../../../libvirt/container-linux/kubernetes"
 
   cluster_name       = "{{CLUSTER_NAME}}"
   controller_count   = 1
@@ -14,7 +13,3 @@ module "google-cloud-cluster" {
   # output assets dir
   asset_dir = "./_output"
 }
-
-#variable cluster_name {
-#  default = "CLUSTER_NAME"
-#}

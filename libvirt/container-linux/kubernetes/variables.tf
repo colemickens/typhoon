@@ -3,36 +3,12 @@ variable "cluster_name" {
   description = "Cluster name"
 }
 
-variable "region" {
-  type        = "string"
-  description = "Google Cloud Region (e.g. us-central1, see `gcloud compute regions list`)"
-}
-
-variable "dns_zone" {
-  type        = "string"
-  description = "Google Cloud DNS Zone (e.g. google-cloud.dghubble.io)"
-}
-
-variable "dns_zone_name" {
-  type        = "string"
-  description = "Google Cloud DNS Zone name (e.g. google-cloud-prod-zone)"
-}
 
 variable "ssh_authorized_key" {
   type        = "string"
   description = "SSH public key for user 'core'"
 }
 
-variable "machine_type" {
-  type        = "string"
-  default     = "n1-standard-1"
-  description = "Machine type for compute instances (see `gcloud compute machine-types list`)"
-}
-
-variable "os_image" {
-  type        = "string"
-  description = "OS image from which to initialize the disk (see `gcloud compute images list`)"
-}
 
 variable "controller_count" {
   type        = "string"
@@ -44,12 +20,6 @@ variable "worker_count" {
   type        = "string"
   default     = "1"
   description = "Number of workers"
-}
-
-variable "worker_preemptible" {
-  type        = "string"
-  default     = "false"
-  description = "If enabled, Compute Engine will terminate workers randomly within 24 hours"
 }
 
 # bootkube assets
